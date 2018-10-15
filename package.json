@@ -7,7 +7,8 @@
   },
   "main": "index.js",
   "scripts": {
-    "start:api": "yarn workspace api start"
+    "start:api": "yarn workspace api start",
+    "start:client": "yarn workspace client start"
   },
   "keywords": [],
   "author": "Alexander Malka",
