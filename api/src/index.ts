@@ -2,6 +2,8 @@ import { MongoClient } from 'mongodb';
 import config from './config';
 import app from './app';
 
+const port = process.env.PORT || 3000;
+
 MongoClient.connect(
   config.mongoUrl,
   { useNewUrlParser: true },
@@ -9,8 +11,8 @@ MongoClient.connect(
     if (err) throw err;
     const db = client.db(config.dbName);
     app.context = Object.create(app.context, { db: { value: db } });
-    app.listen(3000, () => {
-      console.log('listening on port ' + 3000); // eslint-disable-line no-console
+    app.listen(port, () => {
+      console.log('listening on port ' + port); // eslint-disable-line no-console
     });
   }
 );

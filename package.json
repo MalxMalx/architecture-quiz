@@ -8,7 +8,9 @@
   "main": "index.js",
   "scripts": {
     "start:api": "yarn workspace api start",
-    "start:client": "yarn workspace client start"
+    "start:client": "yarn workspace client start",
+    "build:client": "yarn workspace client build",
+    "start": "yarn build:client && PORT=80 yarn start:api"
   },
   "keywords": [],
   "author": "Alexander Malka",
