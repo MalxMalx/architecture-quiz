@@ -8,9 +8,9 @@ import question from './routes/question';
 const app = new Koa();
 const router = new Router({ prefix: '/api/v1' });
 
-router.all('/quiz', quiz.routes());
-router.all('/user', user.routes());
-router.all('/question', question.routes());
+router.use(quiz.routes());
+router.use(user.routes());
+router.use(question.routes());
 
 app.use(bodyParser());
 app.use(router.routes());

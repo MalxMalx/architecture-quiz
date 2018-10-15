@@ -2,7 +2,7 @@ import Router from 'koa-router';
 import { Collection } from 'mongodb';
 import { findOne, insertOne } from '../helpers/mongo';
 
-const router = new Router();
+const router = new Router({ prefix: '/quiz' });
 
 router.post('/start', async (ctx: any) => {
   // Start a quiz

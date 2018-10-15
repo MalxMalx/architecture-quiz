@@ -3,7 +3,7 @@ import { Collection } from 'mongodb';
 import uuidv4 from 'uuid';
 import { insertOne } from '../helpers/mongo';
 
-const router = new Router();
+const router = new Router({ prefix: '/question' });
 
 router.post('/', async (ctx: any) => {
   const { text, answers, correctAnswers } = ctx.request.body;
