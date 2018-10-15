@@ -3,9 +3,9 @@ import uuidv4 from 'uuid';
 import { Collection } from 'mongodb';
 import { findOne, insertOne } from '../helpers/mongo';
 
-const router = new Router({ prefix: '/api/v1' });
+const router = new Router();
 
-router.post('/user', async (ctx: any) => {
+router.post('/', async (ctx: any) => {
   const { username } = ctx.request.body;
 
   if (!username) {
