@@ -1,14 +1,18 @@
 import Router from 'koa-router';
 import { Collection } from 'mongodb';
 import uuidv4 from 'uuid';
+import { get } from 'lodash';
 import { insertOne } from '../helpers/mongo';
 
 const router = new Router({ prefix: '/question' });
 
 router.post('/', async (ctx: any) => {
-  const { text, answers, correctAnswers } = ctx.request.body;
+  const image = get(ctx.request, 'files.image');
+  const text = get(ctx.request, 'body.text');
+  const answers = get(ctx.request, 'body.answers');
+  const correctAnswers = get(ctx.request, 'body.correctAnswers');
 
-  if (!text || !answers || !correctAnswers) {
+  if (!image || !text || !answers || !correctAnswers) {
     return ctx.throw(400);
   }
 
@@ -21,6 +25,8 @@ router.post('/', async (ctx: any) => {
     answers,
     correctAnswers
   });
+
+  // TODO: store the image file
 
   ctx.status = 201;
   ctx.response.body = {
