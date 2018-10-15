@@ -1,0 +1,15 @@
+{
+  "name": "architecture-quiz",
+  "version": "1.0.0",
+  "description": "Architecture Quiz",
+  "engines": {
+    "node": ">=8.12.0"
+  },
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "Alexander Malka",
+  "license": "ISC"
+}
