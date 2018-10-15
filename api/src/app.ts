@@ -1,18 +1,23 @@
 import Koa from 'koa';
 import Router from 'koa-router';
+import serve from 'koa-static';
 import bodyParser from 'koa-body';
+import path from 'path';
 import quiz from './routes/quiz';
 import user from './routes/user';
 import question from './routes/question';
+import historyFallback from 'koa2-history-api-fallback';
 
 const app = new Koa();
-const router = new Router({ prefix: '/api/v1' });
+const apiRouter = new Router({ prefix: '/api/v1' });
 
-router.use(quiz.routes());
-router.use(user.routes());
-router.use(question.routes());
+apiRouter.use(quiz.routes());
+apiRouter.use(user.routes());
+apiRouter.use(question.routes());
 
+app.use(historyFallback());
+app.use(serve(path.join(__dirname, '../../client/build')));
 app.use(bodyParser());
-app.use(router.routes());
+app.use(apiRouter.routes());
 
 export default app;
