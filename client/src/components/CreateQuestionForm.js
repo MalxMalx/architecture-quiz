@@ -11,6 +11,7 @@ import {
 } from 'reactstrap';
 import axios from 'axios';
 
+// TODO:
 // answers
 // correctAnswers
 
@@ -47,8 +48,6 @@ class CreateQuestionForm extends Component {
 
   async handleSubmit(event) {
     event.preventDefault();
-
-    // alert(`You have submitted a question: ${this.state.questionText}`);
 
     const data = new FormData();
     data.append('image', this.state.image);
