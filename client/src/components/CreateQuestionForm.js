@@ -1,3 +1,4 @@
+import axios from 'axios';
 import React, { Component } from 'react';
 import {
   Row,
@@ -9,22 +10,38 @@ import {
   Button,
   FormText
 } from 'reactstrap';
-import axios from 'axios';
+import DynamicMultiInput from './DynamicMultiInput';
 
 // TODO:
-// answers
-// correctAnswers
+// - validate before sending
+// - reset the form on successful submission
 
 class CreateQuestionForm extends Component {
   constructor(props) {
     super(props);
     this.state = {
       questionText: '',
-      image: null
+      image: null,
+      answers: [],
+      correctAnswersIndexes: []
     };
 
     this.handleInputChange = this.handleInputChange.bind(this);
     this.handleSubmit = this.handleSubmit.bind(this);
+    this.onAnswersChange = this.onAnswersChange.bind(this);
+  }
+
+  onAnswersChange({ values, checkedIndexes }) {
+    if (values) {
+      this.setState({
+        answers: values
+      });
+    }
+    if (checkedIndexes) {
+      this.setState({
+        correctAnswersIndexes: checkedIndexes
+      });
+    }
   }
 
   handleInputChange(event) {
@@ -52,8 +69,18 @@ class CreateQuestionForm extends Component {
     const data = new FormData();
     data.append('image', this.state.image);
     data.append('text', this.state.questionText);
+    data.append('answers', this.state.answers);
+    data.append('correctAnswersIndexes', this.state.correctAnswersIndexes);
 
-    await axios.post('/api/v1/question', data);
+    try {
+      const response = await axios.post('/api/v1/question', data);
+      const { id } = response.data;
+
+      alert(`Your question was successfully submitted. here's the id: ${id}`);
+    } catch (error) {
+      console.error(error);
+      alert(`Sorry, your question was NOT submitted! There was an error`);
+    }
   }
 
   render() {
@@ -94,7 +121,11 @@ class CreateQuestionForm extends Component {
                   </FormText>
                 </Col>
               </FormGroup>
-              <br />
+              <DynamicMultiInput
+                label="Answers:"
+                checkboxLabel="correct"
+                onChange={this.onAnswersChange}
+              />
               <Button>Submit</Button>
             </Form>
           </Col>

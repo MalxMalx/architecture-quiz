@@ -7,12 +7,14 @@ class DynamicMultiInput extends Component {
     super();
     this.state = {
       values: [''],
-      maxInputs: 10
+      maxInputs: 10,
+      checkedIndexes: []
     };
 
     this.addInput = this.addInput.bind(this);
     this.removeInput = this.removeInput.bind(this);
     this.handleInputChange = this.handleInputChange.bind(this);
+    this.handleCheckedChange = this.handleCheckedChange.bind(this);
   }
 
   isLastElement(index) {
@@ -24,33 +26,61 @@ class DynamicMultiInput extends Component {
   }
 
   addInput() {
+    const values = [...this.state.values, ''];
     this.setState({
-      values: [...this.state.values, '']
+      values
     });
+    this.emitOnChange({ values });
   }
 
   removeInput(index) {
-    const newValues = [...this.state.values];
+    const values = [...this.state.values];
 
-    newValues.splice(index, 1);
+    values.splice(index, 1);
 
     this.setState({
-      values: newValues
+      values
     });
+    this.emitOnChange({ values });
   }
 
   handleInputChange(value, index) {
-    const newValues = [...this.state.values];
+    const values = [...this.state.values];
 
-    newValues[index] = value;
-
+    values[index] = value;
     this.setState({
-      values: newValues
+      values
     });
+    this.emitOnChange({ values });
   }
 
   isMaxInputsReached() {
     return this.state.values.length >= this.state.maxInputs;
+  }
+
+  handleCheckedChange(event, index) {
+    let checkedIndexes;
+    if (event.target.checked) {
+      checkedIndexes = [...this.state.checkedIndexes, index];
+      this.setState({
+        checkedIndexes
+      });
+    } else {
+      checkedIndexes = [...this.state.checkedIndexes];
+
+      checkedIndexes.splice(index, 1);
+      this.setState({
+        checkedIndexes
+      });
+    }
+    this.emitOnChange({ checkedIndexes });
+  }
+
+  emitOnChange(partialState) {
+    const { onChange } = this.props;
+    if (typeof onChange === 'function') {
+      onChange(partialState);
+    }
   }
 
   render() {
@@ -74,6 +104,17 @@ class DynamicMultiInput extends Component {
               </Col>
               <Col xs="2">
                 <Row>
+                  <Col xs="6">
+                    <Label check>
+                      <Input
+                        type="checkbox"
+                        onChange={event =>
+                          this.handleCheckedChange(event, index)
+                        }
+                      />
+                      {this.props.checkboxLabel}
+                    </Label>
+                  </Col>
                   {this.isNotTheOnlyElement() && (
                     <Col xs="3">
                       <Button onClick={() => this.removeInput(index)}>-</Button>
