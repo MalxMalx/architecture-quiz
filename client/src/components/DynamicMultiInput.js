@@ -56,12 +56,15 @@ class DynamicMultiInput extends Component {
   render() {
     return (
       <FormGroup>
-        <Label for="questionText">Answers:</Label>
+        <Label>{this.props.label}</Label>
         {map(this.state.values, (_, index) => {
+          const name = 'input-' + index;
+
           return (
-            <Row key={index}>
+            <Row className="mb-4" key={index}>
               <Col xs="8">
                 <Input
+                  name={name}
                   type="text"
                   onChange={event =>
                     this.handleInputChange(event.target.value, index)
@@ -72,13 +75,13 @@ class DynamicMultiInput extends Component {
               <Col xs="2">
                 <Row>
                   {this.isNotTheOnlyElement() && (
-                    <Col>
+                    <Col xs="3">
                       <Button onClick={() => this.removeInput(index)}>-</Button>
                     </Col>
                   )}
                   {this.isLastElement(index) &&
                     !this.isMaxInputsReached() && (
-                      <Col>
+                      <Col xs="3">
                         <Button onClick={this.addInput}>+</Button>
                       </Col>
                     )}
