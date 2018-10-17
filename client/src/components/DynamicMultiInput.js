@@ -26,32 +26,38 @@ class DynamicMultiInput extends Component {
   }
 
   addInput() {
-    const values = [...this.state.values, ''];
-    this.setState({
-      values
+    this.setState(state => {
+      const values = [...state.values, ''];
+
+      this.emitOnChange({ values });
+      return {
+        values
+      };
     });
-    this.emitOnChange({ values });
   }
 
   removeInput(index) {
-    const values = [...this.state.values];
+    this.setState(state => {
+      const values = [...state.values];
 
-    values.splice(index, 1);
-
-    this.setState({
-      values
+      values.splice(index, 1);
+      this.emitOnChange({ values });
+      return {
+        values
+      };
     });
-    this.emitOnChange({ values });
   }
 
   handleInputChange(value, index) {
-    const values = [...this.state.values];
+    this.setState(state => {
+      const values = [...state.values];
 
-    values[index] = value;
-    this.setState({
-      values
+      values[index] = value;
+      this.emitOnChange({ values });
+      return {
+        values
+      };
     });
-    this.emitOnChange({ values });
   }
 
   isMaxInputsReached() {
@@ -59,21 +65,25 @@ class DynamicMultiInput extends Component {
   }
 
   handleCheckedChange(event, index) {
-    let checkedIndexes;
     if (event.target.checked) {
-      checkedIndexes = [...this.state.checkedIndexes, index];
-      this.setState({
-        checkedIndexes
+      this.setState(state => {
+        const checkedIndexes = [...state.checkedIndexes, index];
+
+        this.emitOnChange({ checkedIndexes });
+        return {
+          checkedIndexes
+        };
       });
     } else {
-      checkedIndexes = [...this.state.checkedIndexes];
+      this.setState(state => {
+        const checkedIndexes = [...state.checkedIndexes];
 
-      checkedIndexes.splice(index, 1);
-      this.setState({
-        checkedIndexes
+        checkedIndexes.splice(index, 1);
+        return {
+          checkedIndexes
+        };
       });
     }
-    this.emitOnChange({ checkedIndexes });
   }
 
   emitOnChange(partialState) {
