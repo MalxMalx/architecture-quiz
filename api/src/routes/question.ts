@@ -1,4 +1,4 @@
-import Router from 'koa-router';
+import Router, { IRouterContext } from 'koa-router';
 import { Collection } from 'mongodb';
 import uuidv4 from 'uuid';
 import { get } from 'lodash';
@@ -7,7 +7,7 @@ import s3 from '../s3';
 
 const router = new Router({ prefix: '/question' });
 
-router.post('/', async (ctx: any) => {
+router.post('/', async (ctx: IRouterContext) => {
   const files = get(ctx.request, 'files');
 
   console.log(files);
@@ -21,6 +21,7 @@ router.post('/', async (ctx: any) => {
     'body.correctAnswersIndexes'
   );
 
+  // TODO: validate with joi or ajv
   if (
     !images.length ||
     !text ||
