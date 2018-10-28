@@ -1,10 +1,10 @@
-import Router from 'koa-router';
+import Router, { IRouterContext } from 'koa-router';
 import { Collection } from 'mongodb';
-import { findOne, insertOne } from '../helpers/mongo';
+import { db } from '../db';
 
 const router = new Router({ prefix: '/quiz' });
 
-router.post('/start', async (ctx: any) => {
+router.post('/start', async (ctx: IRouterContext) => {
   // Start a quiz
   const { userId } = ctx.request.body;
 
@@ -12,22 +12,22 @@ router.post('/start', async (ctx: any) => {
     return ctx.throw(400, 'userId required');
   }
   // check if userId exists
-  const users: Collection = ctx.db.collection('users');
+  const users: Collection = db.collection('users');
 
-  const user = await findOne(users, { userId });
+  const user = await users.findOne({ userId });
 
   if (!user) {
     return ctx.throw(404, 'user not found');
   }
 
   // create a user-quiz entry
-  const userQuiz: Collection = ctx.db.collection('user-quiz');
+  const userQuizzes: Collection = db.collection('user-quiz');
 
-  await insertOne(userQuiz, { userId, currentQuestionIndex: 0, score: 0 });
+  await userQuizzes.insertOne({ userId, currentQuestionIndex: 0, score: 0 });
 
   // return the first question inside body
-  const questions: Collection = ctx.db.collection('questions');
-  const question = await findOne(questions, {});
+  const questions: Collection = db.collection('questions');
+  const question = await questions.findOne({});
 
   if (!question) {
     throw new Error('No questions!');

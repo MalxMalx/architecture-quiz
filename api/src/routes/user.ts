@@ -1,24 +1,26 @@
-import Router from 'koa-router';
+import Router, { IRouterContext } from 'koa-router';
 import uuidv4 from 'uuid';
 import { Collection } from 'mongodb';
-import { findOne, insertOne } from '../helpers/mongo';
+import { db } from '../db';
 
 const router = new Router({ prefix: '/user' });
 
-router.post('/', async (ctx: any) => {
+router.post('/', async (ctx: IRouterContext) => {
   const { username } = ctx.request.body;
 
   if (!username) {
     return ctx.throw(400, 'username required');
   }
 
-  const users: Collection = ctx.db.collection('users');
+  const users: Collection = db.collection('users');
 
-  if (await findOne(users, { username })) {
+  if (await users.findOne({ username })) {
     return ctx.throw(400, 'username is already taken');
   }
+
   const userId = uuidv4();
-  await insertOne(users, { _id: userId, username });
+
+  await users.insertOne({ _id: userId, username });
 
   ctx.response.body = {
     username: username,
