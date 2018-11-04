@@ -29,3 +29,7 @@ TABLES:
   text
   answers
   correctAnswers
+
+TODO:
+
+1. fix filename change on file input removal in admin ui

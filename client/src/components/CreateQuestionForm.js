@@ -1,16 +1,8 @@
 import axios from 'axios';
 import React, { Component } from 'react';
-import {
-  Row,
-  Col,
-  Form,
-  FormGroup,
-  Label,
-  Input,
-  Button,
-  FormText
-} from 'reactstrap';
+import { Row, Col, Form, FormGroup, Label, Input, Button } from 'reactstrap';
 import DynamicMultiInput from './DynamicMultiInput';
+import DynamicMultiFileInput from './DynamicMultiFileInput';
 
 // TODO:
 // - validate before sending
@@ -21,7 +13,7 @@ class CreateQuestionForm extends Component {
     super(props);
     this.state = {
       questionText: '',
-      image: null,
+      images: [],
       answers: [],
       correctAnswersIndexes: []
     };
@@ -29,6 +21,7 @@ class CreateQuestionForm extends Component {
     this.handleInputChange = this.handleInputChange.bind(this);
     this.handleSubmit = this.handleSubmit.bind(this);
     this.onAnswersChange = this.onAnswersChange.bind(this);
+    this.onFilesChange = this.onFilesChange.bind(this);
   }
 
   onAnswersChange({ values, checkedIndexes }) {
@@ -44,6 +37,12 @@ class CreateQuestionForm extends Component {
     }
   }
 
+  onFilesChange({ files }) {
+    const images = files.filter(obj => obj !== null);
+    console.log(images);
+    this.setState({ images });
+  }
+
   handleInputChange(event) {
     const { target } = event;
     const name = target.name;
@@ -51,7 +50,7 @@ class CreateQuestionForm extends Component {
     let value;
 
     if (target.type === 'file') {
-      value = target.files[0];
+      value = target.files;
     } else if (target.type === 'checkbox') {
       value = target.checked;
     } else {
@@ -66,8 +65,14 @@ class CreateQuestionForm extends Component {
   async handleSubmit(event) {
     event.preventDefault();
 
+    if (!this.state.correctAnswersIndexes.length) {
+      alert('You have to choose the correct answer(s)!');
+      return;
+    }
+
     const data = new FormData();
-    data.append('image', this.state.image);
+
+    this.state.images.forEach(image => data.append('image', image));
     data.append('text', this.state.questionText);
     data.append('answers', this.state.answers);
     data.append('correctAnswersIndexes', this.state.correctAnswersIndexes);
@@ -105,22 +110,10 @@ class CreateQuestionForm extends Component {
                   onChange={this.handleInputChange}
                 />
               </FormGroup>
-              <FormGroup row>
-                <Label for="image" sm={2}>
-                  Image:
-                </Label>
-                <Col sm={10}>
-                  <Input
-                    type="file"
-                    name="image"
-                    id="image"
-                    onChange={this.handleInputChange}
-                  />
-                  <FormText color="muted">
-                    Only files with extensions: *.png, *.jpg, *.jpeg
-                  </FormText>
-                </Col>
-              </FormGroup>
+              <DynamicMultiFileInput
+                label="Image:"
+                onChange={this.onFilesChange}
+              />
               <DynamicMultiInput
                 label="Answers:"
                 checkboxLabel="correct"

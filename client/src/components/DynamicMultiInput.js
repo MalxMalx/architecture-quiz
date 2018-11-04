@@ -10,11 +10,6 @@ class DynamicMultiInput extends Component {
       maxInputs: 10,
       checkedIndexes: []
     };
-
-    this.addInput = this.addInput.bind(this);
-    this.removeInput = this.removeInput.bind(this);
-    this.handleInputChange = this.handleInputChange.bind(this);
-    this.handleCheckedChange = this.handleCheckedChange.bind(this);
   }
 
   isLastElement(index) {
@@ -25,7 +20,7 @@ class DynamicMultiInput extends Component {
     return this.state.values.length > 1;
   }
 
-  addInput() {
+  addInput = () => {
     this.setState(state => {
       const values = [...state.values, ''];
 
@@ -34,9 +29,9 @@ class DynamicMultiInput extends Component {
         values
       };
     });
-  }
+  };
 
-  removeInput(index) {
+  removeInput = index => {
     this.setState(state => {
       const values = [...state.values];
 
@@ -46,9 +41,9 @@ class DynamicMultiInput extends Component {
         values
       };
     });
-  }
+  };
 
-  handleInputChange(value, index) {
+  handleInputChange = (value, index) => {
     this.setState(state => {
       const values = [...state.values];
 
@@ -58,13 +53,13 @@ class DynamicMultiInput extends Component {
         values
       };
     });
-  }
+  };
 
   isMaxInputsReached() {
     return this.state.values.length >= this.state.maxInputs;
   }
 
-  handleCheckedChange(event, index) {
+  handleCheckedChange = (event, index) => {
     if (event.target.checked) {
       this.setState(state => {
         const checkedIndexes = [...state.checkedIndexes, index];
@@ -84,7 +79,7 @@ class DynamicMultiInput extends Component {
         };
       });
     }
-  }
+  };
 
   emitOnChange(partialState) {
     const { onChange } = this.props;
