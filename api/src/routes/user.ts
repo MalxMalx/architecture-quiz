@@ -3,7 +3,7 @@ import uuidv4 from 'uuid';
 import { Collection } from 'mongodb';
 import { db } from '../db';
 
-const router = new Router({ prefix: '/user' });
+const router = new Router({ prefix: '/api/v1/user' });
 
 router.post('/', async (ctx: IRouterContext) => {
   const { username } = ctx.request.body;

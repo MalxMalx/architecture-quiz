@@ -2,7 +2,7 @@ import Router, { IRouterContext } from 'koa-router';
 import { Collection } from 'mongodb';
 import { db } from '../db';
 
-const router = new Router({ prefix: '/quiz' });
+const router = new Router({ prefix: '/api/v1/quiz' });
 
 router.post('/start', async (ctx: IRouterContext) => {
   // Start a quiz
