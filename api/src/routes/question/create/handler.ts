@@ -23,6 +23,8 @@ import {
 } from '../image-upload';
 import { createQuestionRecord } from '../create-question-record';
 
+console.log('handleCreate');
+
 export default async function handleCreate(ctx: IRouterContext) {
   console.log('create a question API request received');
 
