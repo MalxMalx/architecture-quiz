@@ -1,6 +1,12 @@
-import { IncomingMessage } from 'http';
 import Busboy from 'busboy';
+import { IncomingMessage } from 'http';
 import { FormDataField } from '../entities/form-data';
+import {
+  FormDataInvalidFormError,
+  FormDataNoFieldsError,
+  FormDataNoFilesError,
+  FormDataNoFieldsBeforeFilesError
+} from './errors';
 import { Stream } from 'stream';
 
 export interface FileStreamWrapper {
@@ -9,88 +15,104 @@ export interface FileStreamWrapper {
   contentType: string;
 }
 
-export type StreamProcessFunction = (stream: Stream) => Promise<any>;
+export type FileProcessFunction = (file: FileStreamWrapper) => Promise<any>;
 
 export class FormDataParser {
-  private busboy: Busboy;
-  private files: FileStreamWrapper[];
-  private finished: boolean = false;
-  private finishedFields: boolean = false;
-  private invalidFormData: boolean = false;
-  private processedFiles: FileStreamWrapper[];
+  private busboy;
+  private error: Error;
+  private fields: FormDataField[] = [];
+  private processedFiles: FileStreamWrapper[] = [];
+  private formHasFields: Boolean = false;
+  private formHasFiles: Boolean = false;
 
   constructor(req: IncomingMessage) {
     this.busboy = new Busboy({ headers: req.headers });
+    this.init();
   }
 
-  getFields(): Promise<FormDataField[]> {
-    const fields: FormDataField[] = [];
-    let isFirstFile: boolean = true;
-
-    return new Promise((resolve, reject) => {
-      this.busboy.on('field', (fieldName: string, value: string) => {
-        const formDataField: FormDataField = { value, fieldName };
-        fields.push(formDataField);
-
-        console.log(`busboy has found a field: ${fieldName}: ${value}`);
-      });
-
-      this.busboy.on('file', (...args) => {
-        if (!fields.length && !this.finishedFields) {
-          this.finishedFields = true;
-          this.invalidFormData = true;
-          return reject(new Error('Fields not sent or appended after files'));
-        }
-
-        const stream: Stream = args[1];
-        const fileName: string = args[2];
-        const contentType: string = args[4];
-
-        console.log(`busboy has found a file: ${fileName}`);
-
-        if (isFirstFile) {
-          resolve(fields);
-          isFirstFile = false;
-        }
-
-        this.files.push({
-          stream,
-          fileName,
-          contentType
-        });
-      });
-
-      this.busboy.on('finish', () => {
-        if (!fields.length && !this.finishedFields) {
-          this.finishedFields = true;
-          this.invalidFormData = true;
-
-          return reject(new Error('Fields not sent or appended after files'));
-        }
-
-        this.finished = true;
-      });
-
-      this.busboy.on('error', error => reject(error));
+  private init() {
+    this.busboy.on('finish', () => {
+      if (!this.formHasFiles && !this.formHasFields) {
+        this.error = new FormDataInvalidFormError();
+      } else if (!this.formHasFields) {
+        this.error = new FormDataNoFieldsError();
+      } else if (!this.formHasFiles) {
+        this.error = new FormDataNoFilesError();
+      }
+    });
+    this.busboy.on('error', error => {
+      this.error = error;
     });
   }
 
-  async processFiles(doProcessing: StreamProcessFunction): Promise<any> {
-    const processStream = async (file: FileStreamWrapper) => {
-      const processingResult = await doProcessing(file.stream);
+  public getFields(): Promise<FormDataField[]> {
+    return new Promise((resolve, reject) => {
+      if (this.error) {
+        return reject(this.error);
+      }
 
-      this.processedFiles.push(file);
-      return processingResult;
-    };
-
-    if (this.finished) {
-      // all files are already inside `this.files`
-      // which is unlikely
-      return Promise.all(this.files.map(file => processStream(file)));
-    }
+      this.busboy.on('field', (fieldName, value) => {
+        this.formHasFields = true;
+        this.fields.push({ fieldName, value });
+      });
+      this.busboy.on('file', () =>
+        this.formHasFields
+          ? resolve(this.fields)
+          : reject(new FormDataNoFieldsBeforeFilesError())
+      );
+      // in case there are no files, we don't want the promise to get stuck:
+      this.busboy.on('finish', () =>
+        this.formHasFields
+          ? resolve(this.fields)
+          : reject(new FormDataNoFieldsError())
+      );
+    });
   }
 
-  getProcessedFiles(): FileStreamWrapper[] {
+  public processFiles(doProcessing: FileProcessFunction) {
+    return new Promise(async (resolve, reject) => {
+      if (this.error) {
+        return reject(this.error);
+      }
+
+      const processingResults: any[] = [];
+
+      this.busboy.on(
+        'file',
+        async (_fieldName, stream, fileName, _encoding, contentType) => {
+          this.formHasFiles = true;
+
+          if (this.error) {
+            return reject(this.error);
+          }
+
+          const fileData: FileStreamWrapper = {
+            stream,
+            fileName,
+            contentType
+          };
+
+          try {
+            const result = await doProcessing(fileData);
+
+            this.processedFiles.push(fileData);
+
+            processingResults.push(result);
+          } catch (error) {
+            reject(error);
+          }
+        }
+      );
+
+      this.busboy.on('finish', () =>
+        this.formHasFiles
+          ? resolve(processingResults)
+          : reject(new FormDataNoFilesError())
+      );
+    });
+  }
+
+  public getProcessedFiles(): any[] {
     return this.processedFiles;
   }
 }
