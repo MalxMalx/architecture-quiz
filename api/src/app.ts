@@ -21,4 +21,6 @@ app.use(serve(path.join(__dirname, '../../client/build')));
 app.use(bodyParser({ multipart: false }));
 app.use(apiRouter.routes());
 
+console.log(`API routes: ${apiRouter.stack.map(i => i.path).join(', ')}`);
+
 export default app;
