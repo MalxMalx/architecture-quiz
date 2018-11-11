@@ -28,6 +28,7 @@ export class FormDataParser {
   private processingResults: any[] = [];
   private fileCount: number = 0;
   private firstFile: FileStreamWrapper;
+  private hasFinishedParsing: Boolean = false;
 
   constructor(req: IncomingMessage) {
     this.busboy = new Busboy({ headers: req.headers });
@@ -61,6 +62,7 @@ export class FormDataParser {
     );
 
     this.busboy.on('finish', () => {
+      this.hasFinishedParsing = true;
       if (!this.formHasFiles && !this.formHasFields) {
         this.error = new FormDataInvalidFormError();
       } else if (!this.formHasFields) {
@@ -116,6 +118,10 @@ export class FormDataParser {
         } catch (error) {
           reject(error);
         }
+      }
+
+      if (this.hasFinishedParsing) {
+        return resolve(this.processingResults);
       }
 
       this.busboy.on(
