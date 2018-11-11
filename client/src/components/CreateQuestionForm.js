@@ -72,13 +72,19 @@ class CreateQuestionForm extends Component {
 
     const data = new FormData();
 
-    this.state.images.forEach(image => data.append('image', image));
     data.append('text', this.state.questionText);
     data.append('answers', this.state.answers);
     data.append('correctAnswersIndexes', this.state.correctAnswersIndexes);
+    this.state.images.forEach(image => data.append('image', image));
 
     try {
-      const response = await axios.post('/api/v1/question', data);
+      const response = await axios.post(
+        'http://localhost:3000/api/v1/question',
+        data,
+        {
+          validateStatus: status => status === 201
+        }
+      );
       const { id } = response.data;
 
       alert(`Your question was successfully submitted. here's the id: ${id}`);

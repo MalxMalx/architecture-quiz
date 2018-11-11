@@ -1,6 +1,6 @@
 import Busboy from 'busboy';
 import { IncomingMessage } from 'http';
-import { FormDataField } from '../entities/form-data';
+import { FormDataFields } from '../entities/form-data';
 import {
   FormDataInvalidFormError,
   FormDataNoFieldsError,
@@ -13,6 +13,7 @@ export interface FileStreamWrapper {
   stream: Stream;
   fileName: string;
   contentType: string;
+  index: number;
 }
 
 export type FileProcessFunction = (file: FileStreamWrapper) => Promise<any>;
@@ -20,17 +21,45 @@ export type FileProcessFunction = (file: FileStreamWrapper) => Promise<any>;
 export class FormDataParser {
   private busboy;
   private error: Error;
-  private fields: FormDataField[] = [];
+  private fields = {};
   private processedFiles: FileStreamWrapper[] = [];
   private formHasFields: Boolean = false;
   private formHasFiles: Boolean = false;
+  private processingResults: any[] = [];
+  private fileCount: number = 0;
+  private firstFile: FileStreamWrapper;
 
   constructor(req: IncomingMessage) {
     this.busboy = new Busboy({ headers: req.headers });
-    this.init();
+    this.init(req);
   }
 
-  private init() {
+  private init(req: IncomingMessage) {
+    req.pipe(this.busboy);
+
+    this.busboy.on(
+      'file',
+      (_fieldName, stream, fileName, _encoding, contentType) => {
+        if (this.firstFile) {
+          return;
+        }
+        console.log(`file found: ${fileName}`);
+
+        this.formHasFiles = true;
+
+        const fileData: FileStreamWrapper = {
+          stream,
+          fileName,
+          contentType,
+          index: this.fileCount
+        };
+
+        this.fileCount += 1;
+
+        this.firstFile = fileData;
+      }
+    );
+
     this.busboy.on('finish', () => {
       if (!this.formHasFiles && !this.formHasFields) {
         this.error = new FormDataInvalidFormError();
@@ -45,7 +74,7 @@ export class FormDataParser {
     });
   }
 
-  public getFields(): Promise<FormDataField[]> {
+  public getFields(): Promise<FormDataFields> {
     return new Promise((resolve, reject) => {
       if (this.error) {
         return reject(this.error);
@@ -53,51 +82,67 @@ export class FormDataParser {
 
       this.busboy.on('field', (fieldName, value) => {
         this.formHasFields = true;
-        this.fields.push({ fieldName, value });
+        this.fields[fieldName] = value;
       });
       this.busboy.on('file', () =>
         this.formHasFields
-          ? resolve(this.fields)
+          ? resolve(this.fields as FormDataFields)
           : reject(new FormDataNoFieldsBeforeFilesError())
       );
-      // in case there are no files, we don't want the promise to get stuck:
+      // in case there are no files:
       this.busboy.on('finish', () =>
         this.formHasFields
-          ? resolve(this.fields)
+          ? resolve(this.fields as FormDataFields)
           : reject(new FormDataNoFieldsError())
       );
+      this.busboy.on('error', error => reject(error));
     });
   }
 
   public processFiles(doProcessing: FileProcessFunction) {
+    console.log('start processing files');
+
     return new Promise(async (resolve, reject) => {
       if (this.error) {
         return reject(this.error);
       }
 
-      const processingResults: any[] = [];
+      if (this.firstFile) {
+        try {
+          const result = await doProcessing(this.firstFile);
+
+          this.processedFiles.push(this.firstFile);
+          this.processingResults.push(result);
+        } catch (error) {
+          reject(error);
+        }
+      }
 
       this.busboy.on(
         'file',
         async (_fieldName, stream, fileName, _encoding, contentType) => {
+          console.log(`file found: ${fileName}`);
+
           this.formHasFiles = true;
 
           if (this.error) {
             return reject(this.error);
           }
 
-          const fileData: FileStreamWrapper = {
-            stream,
-            fileName,
-            contentType
-          };
-
           try {
+            const fileData: FileStreamWrapper = {
+              stream,
+              fileName,
+              contentType,
+              index: this.fileCount
+            };
+
+            this.fileCount += 1;
+
             const result = await doProcessing(fileData);
 
             this.processedFiles.push(fileData);
-
-            processingResults.push(result);
+            this.processingResults.push(result);
           } catch (error) {
             reject(error);
           }
@@ -106,13 +151,18 @@ export class FormDataParser {
 
       this.busboy.on('finish', () =>
         this.formHasFiles
-          ? resolve(processingResults)
+          ? resolve(this.processingResults)
           : reject(new FormDataNoFilesError())
       );
+      this.busboy.on('error', error => reject(error));
     });
   }
 
-  public getProcessedFiles(): any[] {
+  public getProcessedFiles(): FileStreamWrapper[] {
     return this.processedFiles;
+  }
+
+  public getProcessingResults(): any[] {
+    return this.processingResults;
   }
 }

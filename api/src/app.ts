@@ -18,7 +18,7 @@ apiRouter.use(question.routes());
 app.use(historyFallback());
 app.use(bodyParser());
 app.use(serve(path.join(__dirname, '../../client/build')));
-app.use(bodyParser({ multipart: true }));
+app.use(bodyParser({ multipart: false }));
 app.use(apiRouter.routes());
 
 export default app;
