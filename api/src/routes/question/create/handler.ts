@@ -24,6 +24,8 @@ import {
 import { createQuestionRecord } from '../create-question-record';
 
 export default async function handleCreate(ctx: IRouterContext) {
+  console.log('create a question API request received');
+
   const { req } = ctx.request;
 
   const formDataParser = new FormDataParser(req);
@@ -93,6 +95,8 @@ export default async function handleCreate(ctx: IRouterContext) {
       error instanceof FormDataNoFieldsError ||
       error instanceof FormDataInvalidFormError
     ) {
+      console.error(error);
+
       return ctx.throw(400, error.message);
     }
 
