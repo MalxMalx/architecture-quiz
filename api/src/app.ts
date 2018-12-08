@@ -10,7 +10,6 @@ import historyFallback from 'koa2-history-api-fallback';
 const app = new Koa();
 
 app.use(historyFallback());
-app.use(bodyParser());
 app.use(serve(path.join(__dirname, '../../client/build')));
 app.use(bodyParser({ multipart: false }));
 app.use(quiz.routes());
