@@ -28,3 +28,5 @@ export class FormDataNoFieldsBeforeFilesError extends Error {
 export class FormDataInvalidFileError extends Error {}
 
 export class InsertFailedError extends Error {}
+
+export class GetAllFailedError extends Error {}
