@@ -28,7 +28,13 @@ export default async function handleCreate(ctx: IRouterContext) {
 
   const { req } = ctx.request;
 
-  const formDataParser = new FormDataParser(req);
+  let formDataParser;
+
+  try {
+    formDataParser = new FormDataParser(req);
+  } catch (error) {
+    return ctx.throw(400, error.message);
+  }
 
   const deleteUploadedFiles = () =>
     Promise.all(
